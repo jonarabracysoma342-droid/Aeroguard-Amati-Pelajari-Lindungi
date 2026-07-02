@@ -16,7 +16,6 @@ interface TeacherDashboardProps {
   groups: Group[];
   onUpdateGroups: (groups: Group[]) => void;
   onAddGroup: (groupName: string) => void;
-  handleAddGroupFromClassroom: (groupName: string, code: string) => void;
   onDeleteGroup: (groupCode: string) => void;
   onSimulateJoin: (groupCode: string) => void;
   onAddNotification: (message: string, type: 'info' | 'success' | 'join') => void;
@@ -36,7 +35,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   groups,
   onUpdateGroups,
   onAddGroup,
-  handleAddGroupFromClassroom,
   onDeleteGroup,
   onSimulateJoin,
   onAddNotification,
