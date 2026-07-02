@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (function() {
+        try {
+          var currentFetch = window.fetch;
+          
+          // Try to define it on window directly first
+          try {
+            Object.defineProperty(window, 'fetch', {
+              get: function() { return currentFetch; },
+              set: function(val) { currentFetch = val; },
+              configurable: true,
+              enumerable: true
+            });
+          } catch (e1) {
+            // Log or ignore if window property is sealed
+          }
+
+          // Also try to define it on Window.prototype to catch any prototype lookups
+          try {
+            Object.defineProperty(Window.prototype, 'fetch', {
+              get: function() { return currentFetch; },
+              set: function(val) { currentFetch = val; },
+              configurable: true,
+              enumerable: true
+            });
+          } catch (e2) {
+            // Log or ignore
+          }
+        } catch (e) {
+          console.warn("Fetch polyfill initializer error:", e);
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

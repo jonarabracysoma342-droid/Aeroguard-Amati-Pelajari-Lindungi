@@ -1,0 +1,6 @@
+{
+  "name": "Udaraku: Edu-Game Pencemaran Udara",
+  "description": "Game edukatif interaktif tentang pencemaran lingkungan udara, dilengkapi dengan materi 'Ilmu Baru', game interaktif, kuis, sistem kelompok guru-siswa, gamifikasi, dan mode gelap.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

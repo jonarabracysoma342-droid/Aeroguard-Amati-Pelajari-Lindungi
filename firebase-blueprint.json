@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "Group": {
+      "title": "Group",
+      "description": "A group of students",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "teacherSubject": { "type": "string" }
+      },
+      "required": ["code", "name"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "A student in a group",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "level": { "type": "number" },
+        "exp": { "type": "number" },
+        "ecoPoints": { "type": "number" }
+      },
+      "required": ["name"]
+    }
+  },
+  "firestore": {
+    "/groups/{groupCode}": {
+      "schema": { "$ref": "#/entities/Group" },
+      "description": "Groups collection"
+    },
+    "/groups/{groupCode}/students/{studentName}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Students in a group"
+    }
+  }
+}
