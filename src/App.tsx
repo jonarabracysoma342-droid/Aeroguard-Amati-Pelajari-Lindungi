@@ -476,7 +476,8 @@ export default function App() {
       students: [],
     };
     
-    await setDoc(doc(db, 'groups', code), newGroup);
+    // Save to Firestore, ensuring we also include groupCode explicitly as requested
+    await setDoc(doc(db, 'groups', code), { ...newGroup, groupCode: code });
     
     if (guruProfile) {
       setGuruProfile({
@@ -500,28 +501,6 @@ export default function App() {
       });
     }
     addNotification(`Kelompok ${groupCode} dihapus.`, 'info');
-  };
-
-  const handleAddGroupFromClassroom = async (groupName: string, code: string) => {
-    const codeUpper = code.toUpperCase();
-    if (groups.some(g => g.code === codeUpper)) return; // prevent duplicate
-    const newGroup: Group = {
-      code: codeUpper,
-      name: groupName,
-      teacherName: guruProfile?.name || 'Guru',
-      teacherSubject: guruProfile?.subject || 'Ilmu Pengetahuan Alam (IPA)',
-      students: [],
-    };
-    
-    // Save to Firestore so students on other devices can see it
-    await setDoc(doc(db, 'groups', codeUpper), newGroup);
-    
-    if (guruProfile) {
-      setGuruProfile({
-        ...guruProfile,
-        createdGroups: [...guruProfile.createdGroups, codeUpper],
-      });
-    }
   };
 
   // Simulate Student Joining via Dashboard (makes demo extremely engaging & fully automated)
@@ -561,9 +540,23 @@ export default function App() {
     addNotification(`Siswa "${randomName}" baru saja bergabung ke kelompok ${groupCode}! 👥`, 'join');
   };
 
-  const validateGroupCode = (code: string): boolean => {
+  const validateGroupCode = async (code: string): Promise<boolean> => {
     const sanitized = code.trim().toUpperCase();
-    return groups.some((g) => g.code === sanitized);
+    
+    if (groups.some((g) => g.code === sanitized)) {
+      return true;
+    }
+
+    try {
+      const snap = await getDoc(doc(db, 'groups', sanitized));
+      return snap.exists();
+    } catch (err: any) {
+      console.error("Firebase validateGroupCode error:", err);
+      if (err.message && err.message.includes('offline')) {
+        alert('Koneksi terputus. Tidak dapat memverifikasi kode kelompok dari server. Pastikan kode sudah benar atau koneksi Anda stabil.');
+      }
+      return false;
+    }
   };
 
   // Gamified Dynamic AQI Calculation based on student profile progress
@@ -661,18 +654,36 @@ export default function App() {
   };
 
   // Join a class in-app
-  const handleJoinClassInApp = (code: string) => {
+  const handleJoinClassInApp = async (code: string) => {
     const sanitized = code.trim().toUpperCase();
-    const matchedGroup = groups.find((g) => g.code === sanitized);
-      
-    if (matchedGroup) {
+    
+    if (groups.some((g) => g.code === sanitized)) {
       setSiswaProfile((prev) => {
         if (!prev) return null;
         return { ...prev, joinCode: sanitized };
       });
       addNotification(`Berhasil bergabung ke kelompok ${sanitized}! 👥`, 'success');
-    } else {
-      alert(`Kode kelompok "${code}" tidak valid atau tidak ditemukan.`);
+      return;
+    }
+      
+    try {
+      const snap = await getDoc(doc(db, 'groups', sanitized));
+      if (snap.exists()) {
+        setSiswaProfile((prev) => {
+          if (!prev) return null;
+          return { ...prev, joinCode: sanitized };
+        });
+        addNotification(`Berhasil bergabung ke kelompok ${sanitized}! 👥`, 'success');
+      } else {
+        alert(`Kode kelompok "${code}" tidak ada atau tidak ditemukan.`);
+      }
+    } catch (err: any) {
+      console.error("Firebase handleJoinClassInApp error:", err);
+      if (err.message && err.message.includes('offline')) {
+        alert('Koneksi terputus. Tidak dapat memverifikasi kode kelompok dari server.');
+      } else {
+        alert(`Kode kelompok "${code}" tidak ada atau tidak ditemukan.`);
+      }
     }
   };
 
@@ -1102,7 +1113,6 @@ export default function App() {
                 groups={groups}
                 onUpdateGroups={setGroups}
                 onAddGroup={handleAddGroup}
-                handleAddGroupFromClassroom={handleAddGroupFromClassroom}
                 onDeleteGroup={handleDeleteGroup}
                 onSimulateJoin={handleSimulateJoin}
                 onAddNotification={addNotification}
